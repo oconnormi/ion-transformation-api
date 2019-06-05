@@ -38,12 +38,10 @@
             <version>${project.version}</version>
             <type>zip</type>
         </dependency>
-        <!--<dependency>-->
-            <!--<groupId>com.connexta.discovery</groupId>-->
-            <!--<artifactId>transformation-api-rest-models</artifactId>-->
-            <!--<version>${project.version}</version>-->
-        <!--</dependency>-->
-
+        <dependency>
+            <groupId>javax.annotation</groupId>
+            <artifactId>javax.annotation-api</artifactId>
+        </dependency>
         <dependency>
             <groupId>javax.validation</groupId>
             <artifactId>validation-api</artifactId>

@@ -16,7 +16,15 @@ package com.connexta.transformation;
 import com.connexta.transformation.rest.models.TransformRequest;
 import com.connexta.transformation.rest.models.TransformResponse;
 
+/**
+ * Implementations of the {@code TransformationService} interface provide a mechanism to extract
+ * discovery metatdata and other supporting products from an input product.
+ */
 public interface TransformationService {
 
+  /**
+   * @param request request information about the input to be transformed
+   * @return a response stating that a request has been accepted for processing
+   */
   TransformResponse transform(TransformRequest request);
 }

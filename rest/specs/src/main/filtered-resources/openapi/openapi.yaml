@@ -33,7 +33,7 @@ paths:
       - $ref: '#/components/parameters/AcceptVersion'
     post:
       summary: Transformation request
-      description: A request to transform product into discovery metadata and other supporting products.
+      description: A request to transform a product into discovery metadata and other supporting products.
       operationId: transform
       tags:
         - transform
@@ -58,7 +58,7 @@ paths:
 components:
   requestBodies:
     TransformRequest:
-      description: A request to transform product into discovery metadata and other supporting products.
+      description: A request to transform a product into discovery metadata and other supporting products.
       required: true
       content:
         application/json:
@@ -75,7 +75,7 @@ components:
           schema:
             $ref: '#/components/schemas/TransformResponse'
     BadRequest:
-      description: The client message could not understood by the server due to invalid format or syntax.
+      description: The client message could not be understood by the server due to invalid format or syntax.
       headers:
         'Content-Version':
           $ref: '#/components/headers/ContentVersion'
@@ -145,8 +145,8 @@ components:
       in: header
       name: Accept-Version
       description: >
-        The API version used by the client to produce the REST message. The client will accept
-        responses marked with any minor versions after this one. It does imply that all future
+        The API version used by the client to produce the REST message. The client must accept
+        responses marked with any minor versions after this one. This implies that all future
         minor versions of the message are backward compatible with all previous minor versions of
         the same message.
       required: true
@@ -206,6 +206,7 @@ components:
           description: The unique identifier for a request.
           minLength: 1
           maxLength: 255
+          pattern: '^[a-zA-Z0-9]*$'
           example: 30f14c6c1fc85cba12bfd093aa8f90e3
         stagedLocation:
           type: string
@@ -221,14 +222,14 @@ components:
           example: https://bucket.s3.amazonaws.com
         mimeType:
           type: string
-          description: The mime type of the ingest product.
+          description: The mime type of the ingested product.
           minLength: 1
           maxLength: 255
           example: application/xml
         bytes:
           type: integer
           format: int64
-          description: The size of the ingested product.
+          description: The size, in bytes, of the ingested product.
           minimum: 1
           example: 2147483648
         callbackUrl:
