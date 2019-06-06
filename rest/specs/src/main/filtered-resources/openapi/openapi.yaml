@@ -1,0 +1,307 @@
+# /**
+#  * Copyright (c) Connexta
+#  *
+#  * <p>This is free software: you can redistribute it and/or modify it under the terms of the GNU
+#  * Lesser General Public License as published by the Free Software Foundation, either version 3 of
+#  * the License, or any later version.
+#  *
+#  * <p>This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY;
+#  * without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+#  * GNU Lesser General Public License for more details. A copy of the GNU Lesser General Public
+#  * License is distributed along with this program and can be found at
+#  * <http://www.gnu.org/licenses/lgpl.html>.
+#  */
+openapi: 3.0.2
+
+info:
+  version: ${project.version}
+  title: Transformation API Specification
+  description: >
+    The Transformation API allows products to be transformed into discovery metadata and other supporting products.
+  contact:
+    name: Connexta
+  license:
+    name: GNU Lesser General Public License
+    url: 'http://www.gnu.org/licenses/lgpl.html'
+
+servers:
+  - url: ${rest.server.url}
+
+paths:
+  /transform:
+    parameters:
+      - $ref: '#/components/parameters/AcceptVersion'
+    post:
+      summary: Transformation request
+      description: A request to transform a product into discovery metadata and other supporting products.
+      operationId: transform
+      tags:
+        - transform
+      requestBody:
+        $ref: '#/components/requestBodies/TransformRequest'
+      responses:
+        '202':
+          $ref: '#/components/responses/Accepted'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+        '501':
+          $ref: '#/components/responses/NotImplemented'
+        default:
+          $ref: '#/components/responses/DefaultError'
+
+components:
+  requestBodies:
+    TransformRequest:
+      description: A request to transform a product into discovery metadata and other supporting products.
+      required: true
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/TransformRequest'
+  responses:
+    Accepted:
+      description: The transformation request was accepted for processing.
+      headers:
+        'Content-Version':
+          $ref: '#/components/headers/ContentVersion'
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/TransformResponse'
+    BadRequest:
+      description: The client message could not be understood by the server due to invalid format or syntax.
+      headers:
+        'Content-Version':
+          $ref: '#/components/headers/ContentVersion'
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorResponse'
+    Unauthorized:
+      description: The client could not be authenticated.
+      headers:
+        'Content-Version':
+          $ref: '#/components/headers/ContentVersion'
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorResponse'
+    Forbidden:
+      description: The client is not authorized.
+      headers:
+        'Content-Version':
+          $ref: '#/components/headers/ContentVersion'
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorResponse'
+    InternalServerError:
+      description: The server encountered an unexpected condition that prevented it from fulfilling the request.
+      headers:
+        'Content-Version':
+          $ref: '#/components/headers/ContentVersion'
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorResponse'
+    NotImplemented:
+      description: >
+        The requested API version is not supported and therefore not implemented.
+        Possible codes reported are:
+
+        - 501001 - Unable to parse *Accept-Version*
+
+        - 501002 - The provided major version is no longer supported
+
+        - 501003 - The provided major version is not yet supported by the server
+
+        - 501004 - The provided minor version is not yet supported by the server
+      headers:
+        'Content-Version':
+          $ref: '#/components/headers/ContentVersion'
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorResponse'
+
+    DefaultError:
+      description: Any other possible errors not currently known.
+      headers:
+        'Content-Version':
+          $ref: '#/components/headers/ContentVersion'
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorResponse'
+
+  parameters:
+    AcceptVersion:
+      in: header
+      name: Accept-Version
+      description: >
+        The API version used by the client to produce the REST message. The client must accept
+        responses marked with any minor versions after this one. This implies that all future
+        minor versions of the message are backward compatible with all previous minor versions of
+        the same message.
+      required: true
+      schema:
+        $ref: '#/components/schemas/Version'
+      examples:
+        major.minor:
+          value: '1.2'
+          summary: A released minor version
+        major.minor.patch:
+          value: '1.0.3'
+          summary: A patched version
+        dev:
+          value: '1.2.0-SNAPSHOT'
+          summary: A development version
+
+  headers:
+    ContentVersion:
+      description: >
+        The API version used by the server to produce the REST message. The server will accept
+        messages for any minor versions prior to this one.
+      required: true
+      schema:
+        $ref: '#/components/schemas/Version'
+      examples:
+        major.minor:
+          value: '1.2'
+          summary: A released minor version
+        major.minor.patch:
+          value: '1.0.3'
+          summary: A patched version
+        dev:
+          value: '1.2.0-SNAPSHOT'
+          summary: A development version
+
+  schemas:
+    Version:
+      description: Version number.
+      type: string
+      minLength: 3
+      maxLength: 80
+      pattern: '^([1-9]([0-9]+)?)\.(0|([1-9]([0-9]+)?))(\.(0|([1-9]([0-9]+)?))(-.*)?)?$'
+      example: 1.2, 2.4.3, 0.2.5-SNAPSHOT
+    TransformRequest:
+      description: Transformation request.
+      type: object
+      required:
+        - id
+        - stagedLocation
+        - productLocation
+        - mimeType
+        - bytes
+        - callbackUrl
+      properties:
+        id:
+          type: string
+          description: The unique identifier for a request.
+          minLength: 1
+          maxLength: 255
+          pattern: '^[a-zA-Z0-9]*$'
+          example: 30f14c6c1fc85cba12bfd093aa8f90e3
+        stagedLocation:
+          type: string
+          description: The temporary location of the ingested product.
+          minLength: 1
+          maxLength: 2048
+          example: https://bucket.s3.amazonaws.com
+        productLocation:
+          type: string
+          description: The final location of the ingested product.
+          minLength: 1
+          maxLength: 2048
+          example: https://bucket.s3.amazonaws.com
+        mimeType:
+          type: string
+          description: The mime type of the ingested product.
+          minLength: 1
+          maxLength: 255
+          example: application/xml
+        bytes:
+          type: integer
+          format: int64
+          description: The size, in bytes, of the ingested product.
+          minimum: 1
+          example: 2147483648
+        callbackUrl:
+          type: string
+          description: The URL to call for each completed transformation and for the final completed transformation message.
+          minLength: 1
+          maxLength: 2048
+          example: https://www.example.com/mis
+    TransformResponse:
+      description: Transformation response message.
+      type: object
+      required:
+        - id
+        - message
+      properties:
+        id:
+          type: string
+          description: The unique identifier for the request.
+          minLength: 1
+          maxLength: 255
+          example: 30f14c6c1fc85cba12bfd093aa8f90e999
+        message:
+          type: string
+          description: A message stating that the request has been accepted.
+          minLength: 1
+          maxLength: 1000
+          example: The request with ID 30f14c6c1fc85cba12bfd093aa8f90e999 has been accepted for processing.
+    ErrorResponse:
+      description: Error response message.
+      type: object
+      required:
+        - timestamp
+        - path
+        - status
+        - error
+        - message
+      properties:
+        timestamp:
+          type: string
+          format: date-time
+          description: The server time when the error was generated.
+          example: 2019-05-09T14:47:13.101+0000
+        path:
+          type: string
+          description: The path for the REST endpoint that generated this error.
+          example: /transform
+        status:
+          type: integer
+          format: int32
+          description: The corresponding HTTP status code.
+          minimum: 100
+          maximum: 599
+          example: 400
+        code:
+          type: integer
+          format: int32
+          description: >
+            An optional and more specific code corresponding to the error (specific codes need to be
+            documented as part of the API operation). This code allows a given category of
+            errors (e.g. 501: Not Implemented) to be more specific as to why.
+        error:
+          type: string
+          description: The corresponding HTTP reason phrase.
+          example: Bad Request
+          minLength: 1
+        message:
+          type: string
+          description: Specific information about the error.
+          minLength: 1
+          example: Validation failed for object='systemInfo'.
+        details:
+          type: array
+          items:
+           type: string
+          description: Optional detailed information about the error.
