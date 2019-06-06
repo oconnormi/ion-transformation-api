@@ -8,7 +8,7 @@
 * Set the MAVEN_OPTS variable with appropriate memory settings.
 
 ### How to build ###
-Clone the [Transformation API] (https://github.com/connexta/transformation-api) code repository.
+Clone the Transformation API code repository.
 
 ```
 git clone git@github.com:connexta/transformation-api.git
