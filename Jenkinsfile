@@ -83,7 +83,7 @@ pipeline {
                 stage ('Linux') {
                     steps {
                         withMaven(maven: 'Maven 3.5.4', jdk: 'jdk11', globalMavenSettingsConfig: 'default-global-settings', mavenSettingsConfig: 'codice-maven-settings', mavenOpts: '${LINUX_MVN_RANDOM}') {
-                              sh 'mvn install -B -DskipStatic=true -DskipTests=true $DISABLE_DOWNLOAD_PROGRESS_OPTS'
+                              sh 'mvn install -B -DskipTests $DISABLE_DOWNLOAD_PROGRESS_OPTS'
                               sh 'mvn clean install -B -Dgib.enabled=true -Dgib.referenceBranch=/refs/remotes/origin/$CHANGE_TARGET $DISABLE_DOWNLOAD_PROGRESS_OPTS'
                         }
                     }
@@ -109,56 +109,28 @@ pipeline {
                 }
             }
         }
-        stage('Security Analysis') {
-            parallel {
-                stage ('Owasp') {
-                    steps {
-                        withMaven(maven: 'Maven 3.5.4', jdk: 'jdk11', globalMavenSettingsConfig: 'default-global-settings', mavenSettingsConfig: 'codice-maven-settings', mavenOpts: '${LINUX_MVN_RANDOM}') {
-                            // If this build is not a pull request, run full owasp scan. Otherwise run incremental scan
-                            script {
-                                if (params.RELEASE == true) {
-                                    sh "git checkout ${env.RELEASE_TAG}"
-                                }
-                                if (env.CHANGE_ID == null) {
-                                    sh 'mvn install -B -Powasp -DskipTests=true -nsu $DISABLE_DOWNLOAD_PROGRESS_OPTS'
-                                } else {
-                                    sh 'mvn install -B -Powasp -DskipTests=true  -Dgib.enabled=true -Dgib.referenceBranch=/refs/remotes/origin/$CHANGE_TARGET -nsu $DISABLE_DOWNLOAD_PROGRESS_OPTS'
-                                }
-                            }
-                        }
-                    }
-                }
-            }
-        }
-        stage('Quality Analysis') {
-            parallel {
-                // Sonar stage only runs against master
-                stage ('SonarCloud') {
-                    when {
-                        allOf {
-                            expression { env.CHANGE_ID == null }
-                            branch 'master'
-                            environment name: 'JENKINS_ENV', value: 'prod'
-                        }
-                    }
-                    steps {
-                        script {
-                            if (params.RELEASE == true) {
-                                sh "git checkout ${env.RELEASE_TAG}"
-                            }
-                        }
-                        withMaven(maven: 'M35', jdk: 'jdk11', globalMavenSettingsConfig: 'default-global-settings', mavenSettingsConfig: 'codice-maven-settings', mavenOpts: '${LINUX_MVN_RANDOM}') {
-                            withCredentials([string(credentialsId: 'SonarQubeGithubToken', variable: 'SONARQUBE_GITHUB_TOKEN'), string(credentialsId: 'cxbot-sonarcloud', variable: 'SONAR_TOKEN')]) {
-                                script {
-                                    sh 'mvn -q -B -Dcheckstyle.skip=true org.jacoco:jacoco-maven-plugin:prepare-agent install sonar:sonar -Dsonar.host.url=https://sonarcloud.io -Dsonar.login=$SONAR_TOKEN  -Dsonar.organization=cx -Dsonar.projectKey=${GITHUB_REPONAME} -Dsonar.exclusions=${COVERAGE_EXCLUSIONS} $DISABLE_DOWNLOAD_PROGRESS_OPTS'
-
-                                 }
-                            }
-                        }
-                    }
-                }
-            }
-        }
+// We have been directed to exclude OWASP from the build for now. We will re-enable when a path forward has been decided.
+//        stage('Security Analysis') {
+//            parallel {
+//                stage ('Owasp') {
+//                    steps {
+//                        withMaven(maven: 'Maven 3.5.4', jdk: 'jdk11', globalMavenSettingsConfig: 'default-global-settings', mavenSettingsConfig: 'codice-maven-settings', mavenOpts: '${LINUX_MVN_RANDOM}') {
+//                            // If this build is not a pull request, run full owasp scan. Otherwise run incremental scan
+//                            script {
+//                                if (params.RELEASE == true) {
+//                                    sh "git checkout ${env.RELEASE_TAG}"
+//                                }
+//                                if (env.CHANGE_ID == null) {
+//                                    sh 'mvn install -B -Powasp -DskipTests -nsu $DISABLE_DOWNLOAD_PROGRESS_OPTS'
+//                                } else {
+//                                    sh 'mvn install -B -Powasp -DskipTests -Dgib.enabled=true -Dgib.referenceBranch=/refs/remotes/origin/$CHANGE_TARGET -nsu $DISABLE_DOWNLOAD_PROGRESS_OPTS'
+//                                }
+//                            }
+//                        }
+//                    }
+//               }
+//          }
+//        }
         stage('Release Tag') {
             when { expression { params.RELEASE == true } }
             steps {
@@ -200,8 +172,8 @@ pipeline {
                 }
 
                 withMaven(maven: 'Maven 3.5.4', jdk: 'jdk11', globalMavenSettingsConfig: 'default-global-settings', mavenSettingsConfig: 'codice-maven-settings', mavenOpts: '${LINUX_MVN_RANDOM}') {
-                    sh 'mvn javadoc:aggregate -B -DskipStatic=true -DskipTests=true -nsu $DISABLE_DOWNLOAD_PROGRESS_OPTS'
-                    sh 'mvn deploy -B -DskipStatic=true -DskipTests=true -DretryFailedDeploymentCount=10 -nsu $DISABLE_DOWNLOAD_PROGRESS_OPTS'
+                    sh 'mvn javadoc:aggregate -B -DskipTests -nsu $DISABLE_DOWNLOAD_PROGRESS_OPTS'
+                    sh 'mvn deploy -B -DskipTests -DretryFailedDeploymentCount=10 -nsu $DISABLE_DOWNLOAD_PROGRESS_OPTS'
                 }
             }
         }
